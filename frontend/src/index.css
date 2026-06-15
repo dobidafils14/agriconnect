@@ -1,0 +1,33 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #F4F9F4; color: #1A1A1A; }
+a { text-decoration: none; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+  padding: 24px;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 28px;
+  color: #2D6A4F;
+  margin: 24px 0 8px;
+  font-weight: bold;
+}
+
+.page-subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+input, textarea, select {
+  font-family: inherit;
+}

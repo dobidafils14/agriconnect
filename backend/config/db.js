@@ -6,9 +6,23 @@ const db = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+
+  ssl: {
+    rejectUnauthorized: false
+  },
+
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
+});
+
+db.getConnection((err, connection) => {
+  if (err) {
+    console.error("ERREUR MYSQL :", err);
+  } else {
+    console.log("✅ Connexion MySQL Aiven réussie !");
+    connection.release();
+  }
 });
 
 console.log("Pool MySQL initialisé");

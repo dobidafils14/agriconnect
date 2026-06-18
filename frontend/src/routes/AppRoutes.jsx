@@ -21,110 +21,84 @@ import About from "../pages/About";
 import { useAuth } from "../context/AuthContext";
 
 export default function AppRoutes() {
-const { user } = useAuth();
+  const { user } = useAuth();
 
-const Dashboard =
-user?.role === "admin"
-? AdminDashboard
-: user?.role === "acheteur"
-? BuyerDashboard
-: FarmerDashboard;
+  const Dashboard =
+    user?.role === "admin"
+      ? AdminDashboard
+      : user?.role === "acheteur"
+      ? BuyerDashboard
+      : FarmerDashboard;
 
-return (
-<> <Navbar />
+  return (
+    <>
+      <Navbar />
 
-```
-  <main style={{ minHeight: "80vh" }}>
-    <Routes>
+      <main style={{ minHeight: "80vh" }}>
+        <Routes>
+          <Route path="/" element={<Home />} />
 
-      {/* Pages publiques */}
-      <Route path="/" element={<Home />} />
+          <Route
+            path="/agriculture"
+            element={<Products categorie="agriculture" />}
+          />
 
-      <Route
-        path="/agriculture"
-        element={<Products categorie="agriculture" />}
-      />
+          <Route
+            path="/elevage"
+            element={<Products categorie="elevage" />}
+          />
 
-      <Route
-        path="/elevage"
-        element={<Products categorie="elevage" />}
-      />
+          <Route
+            path="/produit/:id"
+            element={<ProductDetails />}
+          />
 
-      <Route
-        path="/produit/:id"
-        element={<ProductDetails />}
-      />
+          <Route
+            path="/producteur/:id"
+            element={<ProducerProfile />}
+          />
 
-      <Route
-        path="/producteur/:id"
-        element={<ProducerProfile />}
-      />
+          <Route
+            path="/a-propos"
+            element={<About />}
+          />
 
-      <Route
-        path="/a-propos"
-        element={<About />}
-      />
+          <Route
+            path="/connexion"
+            element={user ? <Navigate to="/" replace /> : <Login />}
+          />
 
-      {/* Authentification */}
-      <Route
-        path="/connexion"
-        element={
-          user ? <Navigate to="/" replace /> : <Login />
-        }
-      />
+          <Route
+            path="/inscription"
+            element={user ? <Navigate to="/" replace /> : <Register />}
+          />
 
-      <Route
-        path="/inscription"
-        element={
-          user ? <Navigate to="/" replace /> : <Register />
-        }
-      />
+          <Route
+            path="/dashboard"
+            element={
+              user ? <Dashboard /> : <Navigate to="/connexion" replace />
+            }
+          />
 
-      {/* Pages protégées */}
-      <Route
-        path="/dashboard"
-        element={
-          user ? (
-            <Dashboard />
-          ) : (
-            <Navigate to="/connexion" replace />
-          )
-        }
-      />
+          <Route
+            path="/statistiques"
+            element={
+              user ? <Stats /> : <Navigate to="/connexion" replace />
+            }
+          />
 
-      <Route
-        path="/statistiques"
-        element={
-          user ? (
-            <Stats />
-          ) : (
-            <Navigate to="/connexion" replace />
-          )
-        }
-      />
+          <Route
+            path="/parametres"
+            element={
+              user ? <Settings /> : <Navigate to="/connexion" replace />
+            }
+          />
 
-      <Route
-        path="/parametres"
-        element={
-          user ? (
-            <Settings />
-          ) : (
-            <Navigate to="/connexion" replace />
-          )
-        }
-      />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
 
-      {/* 404 */}
-      <Route
-        path="*"
-        element={<NotFound />}
-      />
-    </Routes>
-  </main>
-
-  <Footer />
-</>
-```
-
-);
+      <Footer />
+    </>
+  );
 }

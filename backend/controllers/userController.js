@@ -1,22 +1,29 @@
-const db   = require("../config/db");
+const db     = require("../config/db");
 const bcrypt = require("bcryptjs");
 
 const getProfile = (req, res) => {
-  db.query("SELECT id, nom, email, role, telephone, photo FROM users WHERE id = ?",
-    [req.user.id], (err, results) => {
+  db.query(
+    "SELECT id, nom, email, role, telephone, photo FROM users WHERE id = ?",
+    [req.user.id],
+    (err, results) => {
       if (err) return res.status(500).json({ success: false, message: err.message });
       res.json({ success: true, data: results[0] });
-    });
+    }
+  );
 };
 
 const updateProfile = (req, res) => {
   const { nom, telephone } = req.body;
-  const photo = req.file ? `/uploads/products/${req.file.filename}` : req.body.photo;
-  db.query("UPDATE users SET nom=?, telephone=?, photo=? WHERE id=?",
-    [nom, telephone, photo, req.user.id], (err) => {
+  const photo = req.file ? `/uploads/profiles/${req.file.filename}` : req.body.photo;
+
+  db.query(
+    "UPDATE users SET nom=?, telephone=?, photo=? WHERE id=?",
+    [nom, telephone, photo, req.user.id],
+    (err) => {
       if (err) return res.status(500).json({ success: false, message: err.message });
-      res.json({ success: true, message: "Profil mis à jour." });
-    });
+      res.json({ success: true, message: "Profil mis à jour.", photo });
+    }
+  );
 };
 
 const changePassword = (req, res) => {
@@ -34,11 +41,13 @@ const changePassword = (req, res) => {
 };
 
 const getAllUsers = (req, res) => {
-  db.query("SELECT id, nom, email, role, telephone, created_at FROM users ORDER BY created_at DESC",
+  db.query(
+    "SELECT id, nom, email, role, telephone, created_at FROM users ORDER BY created_at DESC",
     (err, results) => {
       if (err) return res.status(500).json({ success: false, message: err.message });
       res.json({ success: true, data: results });
-    });
+    }
+  );
 };
 
 const deleteUser = (req, res) => {

@@ -3,7 +3,7 @@ import { useAuth }  from "../context/AuthContext";
 import api from "../services/api";
 
 export default function Settings() {
-  const { user, loginCtx, token } = useAuth();
+  const { user, updateUser } = useAuth();
   const [tab,     setTab]     = useState("profil");
   const [profile, setProfile] = useState({ nom:"", telephone:"", email:"" });
   const [pwd,     setPwd]     = useState({ oldPassword:"", newPassword:"", confirm:"" });
@@ -35,9 +35,15 @@ export default function Settings() {
     if (imageFile) form.append("photo", imageFile);
     else if (imageUrl) form.append("photo", imageUrl);
     try {
-      await api.put("/users/profile", form, { headers:{"Content-Type":"multipart/form-data"} });
+      const res = await api.put("/users/profile", form, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      // ✅ Met à jour le contexte avec le nom ET la photo
+      updateUser({
+        nom:   profile.nom,
+        photo: res.data.photo || user.photo
+      });
       flash("Profil mis à jour !");
-      loginCtx({ ...user, nom: profile.nom }, token);
     } catch(e) { flash(e.response?.data?.message || "Erreur.", true); }
   };
 
@@ -76,12 +82,12 @@ export default function Settings() {
   };
 
   const tabs = [
-    { key:"profil",       label:"👤 Profil"         },
-    { key:"securite",     label:"🔒 Sécurité"        },
-    { key:"apparence",    label:"🎨 Apparence"       },
-    { key:"notifications",label:"🔔 Notifications"   },
-    { key:"langue",       label:"🌍 Langue"          },
-    { key:"compte",       label:"⚠️ Compte"           },
+    { key:"profil",        label:"👤 Profil"       },
+    { key:"securite",      label:"🔒 Sécurité"      },
+    { key:"apparence",     label:"🎨 Apparence"     },
+    { key:"notifications", label:"🔔 Notifications" },
+    { key:"langue",        label:"🌍 Langue"        },
+    { key:"compte",        label:"⚠️ Compte"         },
   ];
 
   return (
@@ -91,8 +97,11 @@ export default function Settings() {
       {/* Tabs */}
       <div style={styles.tabBar}>
         {tabs.map(t => (
-          <button key={t.key} style={{...styles.tabBtn, ...(tab===t.key?styles.tabActive:{})}}
-            onClick={() => setTab(t.key)}>{t.label}</button>
+          <button key={t.key}
+            style={{...styles.tabBtn, ...(tab===t.key ? styles.tabActive : {})}}
+            onClick={() => setTab(t.key)}>
+            {t.label}
+          </button>
         ))}
       </div>
 
@@ -105,21 +114,43 @@ export default function Settings() {
         {tab === "profil" && (
           <div>
             <h2 style={styles.panelTitle}>Modifier mon profil</h2>
+
+            {/* Aperçu photo actuelle */}
+            <div style={{ textAlign:"center", marginBottom:16 }}>
+              {user?.photo ? (
+                <img
+                  src={`http://localhost:5000${user.photo}`}
+                  alt="Photo de profil"
+                  style={{ width:90, height:90, borderRadius:"50%", objectFit:"cover", border:"3px solid #2D6A4F" }}
+                />
+              ) : (
+                <div style={{ width:90, height:90, borderRadius:"50%", background:"#2D6A4F", color:"#fff",
+                  display:"flex", alignItems:"center", justifyContent:"center", fontSize:36, fontWeight:"bold", margin:"0 auto" }}>
+                  {user?.nom?.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+
             <label style={styles.label}>Nom complet</label>
             <input style={styles.input} value={profile.nom}
-              onChange={e=>setProfile({...profile,nom:e.target.value})} />
+              onChange={e => setProfile({...profile, nom:e.target.value})} />
+
             <label style={styles.label}>Téléphone</label>
             <input style={styles.input} value={profile.telephone}
-              onChange={e=>setProfile({...profile,telephone:e.target.value})}
+              onChange={e => setProfile({...profile, telephone:e.target.value})}
               placeholder="+237600000000" />
+
             <label style={styles.label}>Email (non modifiable)</label>
             <input style={{...styles.input, background:"#f0f0f0"}} value={profile.email} disabled />
+
             <label style={styles.label}>Photo de profil — depuis la galerie</label>
             <input type="file" accept="image/*" style={styles.input}
-              onChange={e=>setImageFile(e.target.files[0])} />
+              onChange={e => setImageFile(e.target.files[0])} />
+
             <label style={styles.label}>Photo de profil — depuis un lien URL</label>
             <input style={styles.input} placeholder="https://..." value={imageUrl}
-              onChange={e=>setImageUrl(e.target.value)} />
+              onChange={e => setImageUrl(e.target.value)} />
+
             <button style={styles.btn} onClick={saveProfile}>Sauvegarder le profil</button>
           </div>
         )}
@@ -130,13 +161,13 @@ export default function Settings() {
             <h2 style={styles.panelTitle}>Changer le mot de passe</h2>
             <label style={styles.label}>Ancien mot de passe</label>
             <input style={styles.input} type="password" value={pwd.oldPassword}
-              onChange={e=>setPwd({...pwd,oldPassword:e.target.value})} />
+              onChange={e => setPwd({...pwd, oldPassword:e.target.value})} />
             <label style={styles.label}>Nouveau mot de passe</label>
             <input style={styles.input} type="password" value={pwd.newPassword}
-              onChange={e=>setPwd({...pwd,newPassword:e.target.value})} />
+              onChange={e => setPwd({...pwd, newPassword:e.target.value})} />
             <label style={styles.label}>Confirmer le nouveau mot de passe</label>
             <input style={styles.input} type="password" value={pwd.confirm}
-              onChange={e=>setPwd({...pwd,confirm:e.target.value})} />
+              onChange={e => setPwd({...pwd, confirm:e.target.value})} />
             <button style={styles.btn} onClick={savePassword}>Changer le mot de passe</button>
           </div>
         )}
@@ -147,10 +178,11 @@ export default function Settings() {
             <h2 style={styles.panelTitle}>Thème de l'interface</h2>
             <p style={styles.desc}>Choisissez l'apparence qui vous convient.</p>
             <div style={styles.themeRow}>
-              {["clair","sombre"].map(t=>(
-                <div key={t} style={{...styles.themeCard, border: theme===t?"3px solid #2D6A4F":"3px solid #eee"}}
+              {["clair","sombre"].map(t => (
+                <div key={t}
+                  style={{...styles.themeCard, border: theme===t ? "3px solid #2D6A4F" : "3px solid #eee"}}
                   onClick={() => saveTheme(t)}>
-                  <div style={{ fontSize:32 }}>{t==="clair"?"☀️":"🌙"}</div>
+                  <div style={{ fontSize:32 }}>{t==="clair" ? "☀️" : "🌙"}</div>
                   <span style={{ fontWeight:"bold", textTransform:"capitalize" }}>{t}</span>
                   {theme===t && <span style={{ color:"#2D6A4F", fontSize:12 }}>✓ Actif</span>}
                 </div>
@@ -168,9 +200,9 @@ export default function Settings() {
                 <strong>Notifications générales</strong>
                 <p style={styles.desc}>Recevoir des alertes sur les nouveaux produits et messages.</p>
               </div>
-              <div style={{...styles.toggle, background: notif?"#2D6A4F":"#ccc"}}
+              <div style={{...styles.toggle, background: notif ? "#2D6A4F" : "#ccc"}}
                 onClick={toggleNotif}>
-                <div style={{...styles.toggleDot, transform: notif?"translateX(22px)":"translateX(2px)"}} />
+                <div style={{...styles.toggleDot, transform: notif ? "translateX(22px)" : "translateX(2px)"}} />
               </div>
             </div>
             <div style={styles.toggleRow}>
@@ -190,11 +222,12 @@ export default function Settings() {
           <div>
             <h2 style={styles.panelTitle}>Langue de l'interface</h2>
             <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-              {[["fr","🇫🇷 Français"],["en","🇬🇧 English"],["ar","🇸🇦 العربية"]].map(([code,label])=>(
-                <div key={code} style={{...styles.langCard, border: langue===code?"2px solid #2D6A4F":"2px solid #eee"}}
-                  onClick={()=>saveLangue(code)}>
+              {[["fr","🇫🇷 Français"],["en","🇬🇧 English"],["ar","🇸🇦 العربية"]].map(([code,label]) => (
+                <div key={code}
+                  style={{...styles.langCard, border: langue===code ? "2px solid #2D6A4F" : "2px solid #eee"}}
+                  onClick={() => saveLangue(code)}>
                   <span>{label}</span>
-                  {langue===code && <span style={{color:"#2D6A4F",fontWeight:"bold"}}>✓</span>}
+                  {langue===code && <span style={{ color:"#2D6A4F", fontWeight:"bold" }}>✓</span>}
                 </div>
               ))}
             </div>
